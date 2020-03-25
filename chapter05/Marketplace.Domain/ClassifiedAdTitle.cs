@@ -6,6 +6,13 @@ namespace Marketplace.Domain
 {
     public class ClassifiedAdTitle : Value<ClassifiedAdTitle>
     {
+        internal ClassifiedAdTitle(string value)
+        {
+            Value = value;
+        }
+
+        public string Value { get; }
+
         public static ClassifiedAdTitle FromString(string title)
         {
             CheckValidity(title);
@@ -26,12 +33,10 @@ namespace Marketplace.Domain
             return new ClassifiedAdTitle(value);
         }
 
-        public string Value { get; }
-
-        internal ClassifiedAdTitle(string value) => Value = value;
-
-        public static implicit operator string(ClassifiedAdTitle title) =>
-            title.Value;
+        public static implicit operator string(ClassifiedAdTitle title)
+        {
+            return title.Value;
+        }
 
         private static void CheckValidity(string value)
         {

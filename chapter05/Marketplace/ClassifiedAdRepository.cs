@@ -9,24 +9,35 @@ namespace Marketplace
     {
         private readonly IAsyncDocumentSession _session;
 
-        public ClassifiedAdRepository(IAsyncDocumentSession session) 
-            => _session = session;
-
-        public Task<bool> Exists(ClassifiedAdId id) 
-            => _session.Advanced.ExistsAsync(EntityId(id));
-
-        public Task<ClassifiedAd> Load(ClassifiedAdId id)
-            => _session.LoadAsync<ClassifiedAd>(EntityId(id));
-
-        public async Task Save(ClassifiedAd entity)
+        public ClassifiedAdRepository(IAsyncDocumentSession session)
         {
-            await _session.StoreAsync(entity, EntityId(entity.Id));
-            await _session.SaveChangesAsync();
+            _session = session;
         }
 
-        public void Dispose() => _session.Dispose();
-        
+        public Task<bool> ExistsAsync(ClassifiedAdId id)
+        {
+            return _session.Advanced.ExistsAsync(EntityId(id));
+        }
+
+        public Task<ClassifiedAd> LoadAsync(ClassifiedAdId id)
+        {
+            return _session.LoadAsync<ClassifiedAd>(EntityId(id));
+        }
+
+        public async Task SaveAsync(ClassifiedAd entity)
+        {
+            await _session.StoreAsync(entity, EntityId(entity.Id)).ConfigureAwait(false);
+            await _session.SaveChangesAsync().ConfigureAwait(false);
+        }
+
+        public void Dispose()
+        {
+            _session.Dispose();
+        }
+
         private static string EntityId(ClassifiedAdId id)
-            => $"ClassifiedAd/{id.ToString()}";
+        {
+            return $"ClassifiedAd/{id}";
+        }
     }
 }

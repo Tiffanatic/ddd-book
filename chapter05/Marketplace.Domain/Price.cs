@@ -14,12 +14,14 @@ namespace Marketplace.Domain
         }
 
         internal Price(decimal amount, string currencyCode)
-            : base(amount, new Currency{CurrencyCode = currencyCode})
+            : base(amount, new Currency {CurrencyCode = currencyCode})
         {
         }
 
         public new static Price FromDecimal(decimal amount, string currency,
-            ICurrencyLookup currencyLookup) =>
-            new Price(amount, currency, currencyLookup);
+            ICurrencyLookup currencyLookup)
+        {
+            return new Price(amount, currency, currencyLookup);
+        }
     }
 }

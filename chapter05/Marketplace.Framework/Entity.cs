@@ -8,7 +8,10 @@ namespace Marketplace.Framework
     {
         private readonly List<object> _events;
 
-        protected Entity() => _events = new List<object>();
+        protected Entity()
+        {
+            _events = new List<object>();
+        }
 
         protected void Apply(object @event)
         {
@@ -19,10 +22,16 @@ namespace Marketplace.Framework
 
         protected abstract void When(object @event);
 
-        public IEnumerable<object> GetChanges() => _events.AsEnumerable();
+        public IEnumerable<object> GetChanges()
+        {
+            return _events.AsEnumerable();
+        }
 
-        public void ClearChanges() => _events.Clear();
-        
+        public void ClearChanges()
+        {
+            _events.Clear();
+        }
+
         protected abstract void EnsureValidState();
     }
 }

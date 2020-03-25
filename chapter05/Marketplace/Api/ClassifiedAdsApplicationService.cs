@@ -8,8 +8,8 @@ namespace Marketplace.Api
 {
     public class ClassifiedAdsApplicationService : IApplicationService
     {
-        private readonly IClassifiedAdRepository _repository;
         private readonly ICurrencyLookup _currencyLookup;
+        private readonly IClassifiedAdRepository _repository;
 
         public ClassifiedAdsApplicationService(
             IClassifiedAdRepository repository, ICurrencyLookup currencyLookup)
@@ -18,39 +18,40 @@ namespace Marketplace.Api
             _currencyLookup = currencyLookup;
         }
 
-        public async Task Handle(object command)
+        public async Task HandleAsync(object command)
         {
             switch (command)
             {
                 case ClassifiedAds.V1.Create cmd:
-                    if (await _repository.Exists(cmd.Id.ToString()))
+                    if (await _repository.ExistsAsync(cmd.Id.ToString()).ConfigureAwait(false))
                         throw new InvalidOperationException($"Entity with id {cmd.Id} already exists");
 
                     var classifiedAd = new ClassifiedAd(
                         new ClassifiedAdId(cmd.Id),
                         new UserId(cmd.OwnerId));
 
-                    await _repository.Save(classifiedAd);
+                    await _repository.SaveAsync(classifiedAd).ConfigureAwait(false);
                     break;
 
                 case ClassifiedAds.V1.SetTitle cmd:
-                    await HandleUpdate(cmd.Id,
-                        c => c.SetTitle(ClassifiedAdTitle.FromString(cmd.Title)));
+                    await HandleUpdateAsync(cmd.Id,
+                        c => c.SetTitle(ClassifiedAdTitle.FromString(cmd.Title))).ConfigureAwait(false);
                     break;
 
                 case ClassifiedAds.V1.UpdateText cmd:
-                    await HandleUpdate(cmd.Id,
-                        c => c.UpdateText(ClassifiedAdText.FromString(cmd.Text)));
+                    await HandleUpdateAsync(cmd.Id,
+                        c => c.UpdateText(ClassifiedAdText.FromString(cmd.Text))).ConfigureAwait(false);
                     break;
 
                 case ClassifiedAds.V1.UpdatePrice cmd:
-                    await HandleUpdate(cmd.Id,
-                        c => c.UpdatePrice(Price.FromDecimal(cmd.Price, cmd.Currency, _currencyLookup)));
+                    await HandleUpdateAsync(cmd.Id,
+                            c => c.UpdatePrice(Price.FromDecimal(cmd.Price, cmd.Currency, _currencyLookup)))
+                        .ConfigureAwait(false);
                     break;
 
                 case ClassifiedAds.V1.RequestToPublish cmd:
-                    await HandleUpdate(cmd.Id,
-                        c => c.RequestToPublish());
+                    await HandleUpdateAsync(cmd.Id,
+                        c => c.RequestToPublish()).ConfigureAwait(false);
                     break;
 
                 default:
@@ -59,15 +60,15 @@ namespace Marketplace.Api
             }
         }
 
-        private async Task HandleUpdate(Guid classifiedAdId, Action<ClassifiedAd> operation)
+        private async Task HandleUpdateAsync(Guid classifiedAdId, Action<ClassifiedAd> operation)
         {
-            var classifiedAd = await _repository.Load(classifiedAdId.ToString());
+            var classifiedAd = await _repository.LoadAsync(classifiedAdId.ToString()).ConfigureAwait(false);
             if (classifiedAd == null)
                 throw new InvalidOperationException($"Entity with id {classifiedAdId} cannot be found");
 
             operation(classifiedAd);
 
-            await _repository.Save(classifiedAd);
+            await _repository.SaveAsync(classifiedAd).ConfigureAwait(false);
         }
     }
 }

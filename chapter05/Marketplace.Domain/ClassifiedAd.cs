@@ -4,6 +4,23 @@ namespace Marketplace.Domain
 {
     public class ClassifiedAd : Entity<ClassifiedAdId>
     {
+        public enum ClassifiedAdState
+        {
+            PendingReview,
+            Active,
+            Inactive,
+            MarkedAsSold
+        }
+
+        public ClassifiedAd(ClassifiedAdId id, UserId ownerId)
+        {
+            Apply(new Events.ClassifiedAdCreated
+            {
+                Id = id,
+                OwnerId = ownerId
+            });
+        }
+
         public ClassifiedAdId Id { get; private set; }
         public UserId OwnerId { get; private set; }
         public ClassifiedAdTitle Title { get; private set; }
@@ -12,37 +29,38 @@ namespace Marketplace.Domain
         public ClassifiedAdState State { get; private set; }
         public UserId ApprovedBy { get; private set; }
 
-        public ClassifiedAd(ClassifiedAdId id, UserId ownerId) =>
-            Apply(new Events.ClassifiedAdCreated
-            {
-                Id = id,
-                OwnerId = ownerId
-            });
-
-        public void SetTitle(ClassifiedAdTitle title) =>
+        public void SetTitle(ClassifiedAdTitle title)
+        {
             Apply(new Events.ClassifiedAdTitleChanged
             {
                 Id = Id,
                 Title = title
             });
+        }
 
-        public void UpdateText(ClassifiedAdText text) =>
+        public void UpdateText(ClassifiedAdText text)
+        {
             Apply(new Events.ClassifiedAdTextUpdated
             {
                 Id = Id,
                 AdText = text
             });
+        }
 
-        public void UpdatePrice(Price price) =>
+        public void UpdatePrice(Price price)
+        {
             Apply(new Events.ClassifiedAdPriceUpdated
             {
                 Id = Id,
                 Price = price.Amount,
                 CurrencyCode = price.Currency.CurrencyCode
             });
+        }
 
-        public void RequestToPublish() =>
+        public void RequestToPublish()
+        {
             Apply(new Events.ClassidiedAdSentForReview {Id = Id});
+        }
 
         protected override void When(object @event)
         {
@@ -73,31 +91,23 @@ namespace Marketplace.Domain
             var valid =
                 Id != null &&
                 OwnerId != null &&
-                (State switch
+                State switch
                 {
                     ClassifiedAdState.PendingReview =>
-                        Title != null
-                        && Text != null
-                        && Price?.Amount > 0,
+                    Title != null
+                    && Text != null
+                    && Price?.Amount > 0,
                     ClassifiedAdState.Active =>
-                        Title != null
-                        && Text != null
-                        && Price?.Amount > 0
-                        && ApprovedBy != null,
+                    Title != null
+                    && Text != null
+                    && Price?.Amount > 0
+                    && ApprovedBy != null,
                     _ => true
-                });
+                };
 
             if (!valid)
                 throw new InvalidEntityStateException(
                     this, $"Post-checks failed in state {State}");
-        }
-
-        public enum ClassifiedAdState
-        {
-            PendingReview,
-            Active,
-            Inactive,
-            MarkedAsSold
         }
     }
 }
